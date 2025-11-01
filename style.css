@@ -1,0 +1,40 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 2rem;
+}
+#heatmap {
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  gap: 2px;
+}
+.cell {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+.level-0 { background: #e5e7eb; }   /* gray: 0 */
+.level-1 { background: #d1fae5; }   /* very light green */
+.level-2 { background: #6ee7b7; }   /* light green */
+.level-3 { background: #10b981; }   /* medium green */
+.level-4 { background: #047857; }   /* dark green */
+.cell:hover {
+  outline: 2px solid #111827;
+  z-index: 1;
+  position: relative;
+}
+.tooltip {
+  display: none;
+  position: absolute;
+  background: #111827;
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  left: 20px;
+  top: -10px;
+}
+.cell:hover .tooltip {
+  display: block;
+}
