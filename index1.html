@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Tracker Heatmap</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 20px;
+      background: #fff;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: #f5f5f5;
+      border-color: #999;
+    }
+    
+    .btn-primary {
+      background: #0969da;
+      color: white;
+      border-color: #0969da;
+    }
+    
+    .btn-primary:hover {
+      background: #0860ca;
+    }
+    
+    .task-selector {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      min-width: 150px;
+    }
+    
+    .heatmap-section {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .task-name {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+    
+    .legend-label {
+      margin-right: 5px;
+    }
+    
+    .legend-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    #heatmap {
+      display: grid;
+      grid-template-rows: repeat(7, 1fr);
+      grid-auto-flow: column;
+      gap: 3px;
+      margin: 15px 0;
+    }
+    
+    .cell {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.1s;
+    }
+    
+    .cell:hover {
+      outline: 2px solid #000;
+      transform: scale(1.2);
+      z-index: 10;
+    }
+    
+    .tooltip {
+      display: none;
+      position: fixed;
+      background: #1f2937;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    
+    .tooltip.show {
+      display: block;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    
+    .color-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .color-input-label {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+    
+    .color-input {
+      width: 100%;
+      height: 40px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .intensity-selector {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .intensity-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .intensity-btn.selected {
+      border-color: #0969da;
+      background: #f0f7ff;
+    }
+    
+    .intensity-btn:hover {
+      border-color: #999;
+    }
+    
+    .date-display {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Task Activity Tracker</h1>
+      <div class="controls">
+        <select class="task-selector" id="taskSelector">
+          <option value="">Select Task</option>
+        </select>
+        <button class="btn btn-primary" onclick="openTaskModal()">+ New Task</button>
+        <button class="btn" onclick="openSettingsModal()">⚙️ Settings</button>
+      </div>
+    </div>
+    
+    <div id="heatmapContainer"></div>
+  </div>
+  
+  <div class="tooltip" id="tooltip"></div>
+  
+  <!-- Task Modal -->
+  <div class="modal" id="taskModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Create New Task</h2>
+        <button class="close-btn" onclick="closeTaskModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Task Name</label>
+        <input type="text" class="form-input" id="taskNameInput" placeholder="e.g., Studying, Exercise, Reading">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Color Theme</label>
+        <div class="color-grid">
+          <div class="color-input-group">
+            <label class="color-input-label">Level 0</label>
+            <input type="color" class="color-input" id="color0" value="#ebedf0">
+          </div>
+          <div class="color-input-group">
+            <label class="color-input-label">Level 1</label>
+            <input type="color" class="color-input" id="color1" value="#9be9a8">
+          </div>
+          <div class="color-input-group">
+            <label class="color-input-label">Level 2</label>
+            <input type="color" class="color-input" id="color2" value="#40c463">
+          </div>
+          <div class="color-input-group">
+            <label class="color-input-label">Level 3</label>
+            <input type="color" class="color-input" id="color3" value="#30a14e">
+          </div>
+          <div class="color-input-group">
+            <label class="color-input-label">Level 4</label>
+            <input type="color" class="color-input" id="color4" value="#216e39">
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width: 100%;" onclick="createTask()">Create Task</button>
+    </div>
+  </div>
+  
+  <!-- Intensity Modal -->
+  <div class="modal" id="intensityModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Set Intensity</h2>
+        <button class="close-btn" onclick="closeIntensityModal()">&times;</button>
+      </div>
+      <div class="date-display" id="selectedDate"></div>
+      <div class="intensity-selector">
+        <button class="intensity-btn" onclick="setIntensity(0)">
+          <div>None</div>
+          <div style="font-size: 11px; color: #666;">Level 0</div>
+        </button>
+        <button class="intensity-btn" onclick="setIntensity(1)">
+          <div>Low</div>
+          <div style="font-size: 11px; color: #666;">Level 1</div>
+        </button>
+        <button class="intensity-btn" onclick="setIntensity(2)">
+          <div>Medium</div>
+          <div style="font-size: 11px; color: #666;">Level 2</div>
+        </button>
+        <button class="intensity-btn" onclick="setIntensity(3)">
+          <div>High</div>
+          <div style="font-size: 11px; color: #666;">Level 3</div>
+        </button>
+        <button class="intensity-btn" onclick="setIntensity(4)">
+          <div>Very High</div>
+          <div style="font-size: 11px; color: #666;">Level 4</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      tasks: [],
+      currentTask: null,
+      selectedDate: null,
+      startDate: new Date(new Date().getFullYear(), 0, 1)
+    };
+    
+    function initializeApp() {
+      const savedTasks = localStorage.getItem('taskTrackerTasks');
+      if (savedTasks) {
+        state.tasks = JSON.parse(savedTasks);
+        updateTaskSelector();
+        if (state.tasks.length > 0) {
+          state.currentTask = state.tasks[0].id;
+          renderAllHeatmaps();
+        }
+      }
+    }
+    
+    function saveTasks() {
+      localStorage.setItem('taskTrackerTasks', JSON.stringify(state.tasks));
+    }
+    
+    function openTaskModal() {
+      document.getElementById('taskModal').classList.add('show');
+    }
+    
+    function closeTaskModal() {
+      document.getElementById('taskModal').classList.remove('show');
+      document.getElementById('taskNameInput').value = '';
+    }
+    
+    function createTask() {
+      const name = document.getElementById('taskNameInput').value.trim();
+      if (!name) {
+        alert('Please enter a task name');
+        return;
+      }
+      
+      const colors = [
+        document.getElementById('color0').value,
+        document.getElementById('color1').value,
+        document.getElementById('color2').value,
+        document.getElementById('color3').value,
+        document.getElementById('color4').value
+      ];
+      
+      const task = {
+        id: Date.now().toString(),
+        name: name,
+        colors: colors,
+        data: {}
+      };
+      
+      state.tasks.push(task);
+      saveTasks();
+      updateTaskSelector();
+      closeTaskModal();
+      renderAllHeatmaps();
+    }
+    
+    function updateTaskSelector() {
+      const selector = document.getElementById('taskSelector');
+      selector.innerHTML = '<option value="">Select Task</option>';
+      state.tasks.forEach(task => {
+        const option = document.createElement('option');
+        option.value = task.id;
+        option.textContent = task.name;
+        selector.appendChild(option);
+      });
+    }
+    
+    function renderAllHeatmaps() {
+      const container = document.getElementById('heatmapContainer');
+      container.innerHTML = '';
+      
+      state.tasks.forEach(task => {
+        const section = document.createElement('div');
+        section.className = 'heatmap-section';
+        
+        const header = document.createElement('div');
+        header.className = 'task-header';
+        
+        const taskName = document.createElement('div');
+        taskName.className = 'task-name';
+        taskName.textContent = task.name;
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn';
+        deleteBtn.textContent = '🗑️ Delete';
+        deleteBtn.onclick = () => deleteTask(task.id);
+        
+        header.appendChild(taskName);
+        header.appendChild(deleteBtn);
+        
+        const heatmapDiv = document.createElement('div');
+        heatmapDiv.id = `heatmap-${task.id}`;
+        heatmapDiv.className = 'heatmap-grid';
+        
+        const legend = createLegend(task.colors);
+        
+        section.appendChild(header);
+        section.appendChild(heatmapDiv);
+        section.appendChild(legend);
+        container.appendChild(section);
+        
+        renderHeatmap(task);
+      });
+    }
+    
+    function createLegend(colors) {
+      const legend = document.createElement('div');
+      legend.className = 'legend';
+      
+      const label = document.createElement('span');
+      label.className = 'legend-label';
+      label.textContent = 'Less';
+      legend.appendChild(label);
+      
+      colors.forEach((color, i) => {
+        const box = document.createElement('div');
+        box.className = 'legend-box';
+        box.style.background = color;
+        legend.appendChild(box);
+      });
+      
+      const labelMore = document.createElement('span');
+      labelMore.className = 'legend-label';
+      labelMore.textContent = 'More';
+      legend.appendChild(labelMore);
+      
+      return legend;
+    }
+    
+    function renderHeatmap(task) {
+      const heatmapDiv = document.getElementById(`heatmap-${task.id}`);
+      heatmapDiv.innerHTML = '';
+      heatmapDiv.style.display = 'grid';
+      heatmapDiv.style.gridTemplateRows = 'repeat(7, 1fr)';
+      heatmapDiv.style.gridAutoFlow = 'column';
+      heatmapDiv.style.gap = '3px';
+      
+      const cols = 53;
+      const rows = 7;
+      
+      for (let week = 0; week < cols; week++) {
+        for (let day = 0; day < rows; day++) {
+          const date = getDateFromPosition(day, week);
+          const dateStr = formatDate(date);
+          const level = task.data[dateStr] || 0;
+          
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.style.background = task.colors[level];
+          cell.dataset.date = dateStr;
+          cell.dataset.taskId = task.id;
+          cell.dataset.level = level;
+          
+          cell.onclick = () => openIntensityModal(task.id, dateStr, level);
+          cell.onmouseenter = (e) => showTooltip(e, task.name, dateStr, level);
+          cell.onmouseleave = hideTooltip;
+          
+          heatmapDiv.appendChild(cell);
+        }
+      }
+    }
+    
+    function getDateFromPosition(day, week) {
+      const date = new Date(state.startDate);
+      const startDay = date.getDay();
+      const offset = (day - (startDay === 0 ? 6 : startDay - 1) + 7) % 7;
+      date.setDate(date.getDate() + offset + (week * 7));
+      return date;
+    }
+    
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    function showTooltip(e, taskName, dateStr, level) {
+      const tooltip = document.getElementById('tooltip');
+      const levelNames = ['None', 'Low', 'Medium', 'High', 'Very High'];
+      tooltip.textContent = `${taskName} - ${dateStr}: ${levelNames[level]} (Level ${level})`;
+      tooltip.classList.add('show');
+      
+      const rect = e.target.getBoundingClientRect();
+      tooltip.style.left = rect.right + 10 + 'px';
+      tooltip.style.top = rect.top + 'px';
+    }
+    
+    function hideTooltip() {
+      document.getElementById('tooltip').classList.remove('show');
+    }
+    
+    function openIntensityModal(taskId, dateStr, currentLevel) {
+      state.currentTask = taskId;
+      state.selectedDate = dateStr;
+      
+      document.getElementById('selectedDate').textContent = dateStr;
+      document.getElementById('intensityModal').classList.add('show');
+      
+      const buttons = document.querySelectorAll('.intensity-btn');
+      buttons.forEach((btn, i) => {
+        btn.classList.toggle('selected', i === currentLevel);
+      });
+    }
+    
+    function closeIntensityModal() {
+      document.getElementById('intensityModal').classList.remove('show');
+    }
+    
+    function setIntensity(level) {
+      const task = state.tasks.find(t => t.id === state.currentTask);
+      if (task) {
+        task.data[state.selectedDate] = level;
+        saveTasks();
+        renderAllHeatmaps();
+        closeIntensityModal();
+      }
+    }
+    
+    function deleteTask(taskId) {
+      if (confirm('Are you sure you want to delete this task?')) {
+        state.tasks = state.tasks.filter(t => t.id !== taskId);
+        saveTasks();
+        renderAllHeatmaps();
+        updateTaskSelector();
+      }
+    }
+    
+    function openSettingsModal() {
+      alert('Settings coming soon! You can customize colors when creating tasks.');
+    }
+    
+    initializeApp();
+  </script>
+</body>
+</html>
