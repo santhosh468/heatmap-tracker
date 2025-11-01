@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Tracker Heatmap</title>
+  <title>Task Heatmap Widget</title>
   <style>
     * {
       margin: 0;
@@ -13,47 +13,43 @@
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      padding: 20px;
-      background: #fff;
+      padding: 15px;
+      background: transparent;
       color: #333;
     }
     
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
+    .widget {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
     
-    h1 {
-      font-size: 24px;
+    .task-name {
+      font-size: 14px;
       font-weight: 600;
-    }
-    
-    .controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
+      color: #333;
     }
     
     .btn {
-      padding: 8px 16px;
+      padding: 4px 10px;
       border: 1px solid #ddd;
       background: white;
-      border-radius: 6px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 11px;
       transition: all 0.2s;
     }
     
     .btn:hover {
       background: #f5f5f5;
-      border-color: #999;
     }
     
     .btn-primary {
@@ -66,75 +62,41 @@
       background: #0860ca;
     }
     
-    .task-selector {
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      min-width: 150px;
+    #heatmap {
+      display: grid;
+      grid-template-rows: repeat(7, 1fr);
+      grid-auto-flow: column;
+      gap: 2px;
+      margin: 10px 0;
     }
     
-    .heatmap-section {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
+    .cell {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: transform 0.1s;
     }
     
-    .task-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    
-    .task-name {
-      font-size: 18px;
-      font-weight: 600;
+    .cell:hover {
+      outline: 1px solid #000;
+      transform: scale(1.3);
+      z-index: 10;
     }
     
     .legend {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 12px;
+      gap: 5px;
+      font-size: 10px;
       color: #666;
-      margin-top: 10px;
-    }
-    
-    .legend-label {
-      margin-right: 5px;
+      margin-top: 8px;
     }
     
     .legend-box {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 2px;
-      border: 1px solid #e5e7eb;
-    }
-    
-    #heatmap {
-      display: grid;
-      grid-template-rows: repeat(7, 1fr);
-      grid-auto-flow: column;
-      gap: 3px;
-      margin: 15px 0;
-    }
-    
-    .cell {
-      width: 12px;
-      height: 12px;
-      border-radius: 2px;
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.1s;
-    }
-    
-    .cell:hover {
-      outline: 2px solid #000;
-      transform: scale(1.2);
-      z-index: 10;
     }
     
     .tooltip {
@@ -142,13 +104,13 @@
       position: fixed;
       background: #1f2937;
       color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
       pointer-events: none;
       z-index: 1000;
       white-space: nowrap;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     
     .tooltip.show {
@@ -174,95 +136,36 @@
     
     .modal-content {
       background: white;
-      padding: 30px;
-      border-radius: 12px;
+      padding: 20px;
+      border-radius: 8px;
       width: 90%;
-      max-width: 600px;
-      max-height: 80vh;
-      overflow-y: auto;
+      max-width: 350px;
     }
     
     .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    
-    .modal-title {
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 600;
-    }
-    
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: #666;
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    .form-label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      font-size: 14px;
-    }
-    
-    .form-input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-    }
-    
-    .color-input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    
-    .color-input-label {
-      font-size: 12px;
-      color: #666;
-      text-align: center;
-    }
-    
-    .color-input {
-      width: 100%;
-      height: 40px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      cursor: pointer;
+      margin-bottom: 15px;
     }
     
     .intensity-selector {
       display: flex;
-      gap: 10px;
-      margin-top: 15px;
+      gap: 8px;
+      flex-direction: column;
     }
     
     .intensity-btn {
-      flex: 1;
-      padding: 12px;
+      padding: 10px;
       border: 2px solid #ddd;
       background: white;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     
     .intensity-btn.selected {
@@ -276,246 +179,155 @@
     
     .date-display {
       text-align: center;
-      font-size: 14px;
+      font-size: 12px;
       color: #666;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       font-weight: 500;
+    }
+    
+    .color-preview {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      border: 1px solid #ddd;
+    }
+
+    .setup {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .setup-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .color-grid {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+      justify-content: center;
+    }
+
+    .color-input {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Task Activity Tracker</h1>
-      <div class="controls">
-        <select class="task-selector" id="taskSelector">
-          <option value="">Select Task</option>
-        </select>
-        <button class="btn btn-primary" onclick="openTaskModal()">+ New Task</button>
-        <button class="btn" onclick="openSettingsModal()">⚙️ Settings</button>
+  <div class="widget" id="widget">
+    <div id="setupScreen">
+      <div class="setup">
+        <div class="setup-title">Create Task Tracker</div>
+        <input type="text" class="form-input" id="taskName" placeholder="Task name (e.g., Studying)">
+        <div class="color-grid">
+          <input type="color" class="color-input" id="c0" value="#ebedf0" title="Level 0">
+          <input type="color" class="color-input" id="c1" value="#9be9a8" title="Level 1">
+          <input type="color" class="color-input" id="c2" value="#40c463" title="Level 2">
+          <input type="color" class="color-input" id="c3" value="#30a14e" title="Level 3">
+          <input type="color" class="color-input" id="c4" value="#216e39" title="Level 4">
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="setupTask()">Create</button>
       </div>
     </div>
-    
-    <div id="heatmapContainer"></div>
+
+    <div id="trackerScreen" style="display: none;">
+      <div class="header">
+        <div class="task-name" id="taskTitle"></div>
+        <button class="btn" onclick="resetTask()">Reset</button>
+      </div>
+      <div id="heatmap"></div>
+      <div class="legend">
+        <span>Less</span>
+        <div class="legend-box" id="l0"></div>
+        <div class="legend-box" id="l1"></div>
+        <div class="legend-box" id="l2"></div>
+        <div class="legend-box" id="l3"></div>
+        <div class="legend-box" id="l4"></div>
+        <span>More</span>
+      </div>
+    </div>
   </div>
   
   <div class="tooltip" id="tooltip"></div>
   
-  <!-- Task Modal -->
-  <div class="modal" id="taskModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Create New Task</h2>
-        <button class="close-btn" onclick="closeTaskModal()">&times;</button>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Task Name</label>
-        <input type="text" class="form-input" id="taskNameInput" placeholder="e.g., Studying, Exercise, Reading">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Color Theme</label>
-        <div class="color-grid">
-          <div class="color-input-group">
-            <label class="color-input-label">Level 0</label>
-            <input type="color" class="color-input" id="color0" value="#ebedf0">
-          </div>
-          <div class="color-input-group">
-            <label class="color-input-label">Level 1</label>
-            <input type="color" class="color-input" id="color1" value="#9be9a8">
-          </div>
-          <div class="color-input-group">
-            <label class="color-input-label">Level 2</label>
-            <input type="color" class="color-input" id="color2" value="#40c463">
-          </div>
-          <div class="color-input-group">
-            <label class="color-input-label">Level 3</label>
-            <input type="color" class="color-input" id="color3" value="#30a14e">
-          </div>
-          <div class="color-input-group">
-            <label class="color-input-label">Level 4</label>
-            <input type="color" class="color-input" id="color4" value="#216e39">
-          </div>
-        </div>
-      </div>
-      <button class="btn btn-primary" style="width: 100%;" onclick="createTask()">Create Task</button>
-    </div>
-  </div>
-  
-  <!-- Intensity Modal -->
   <div class="modal" id="intensityModal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Set Intensity</h2>
-        <button class="close-btn" onclick="closeIntensityModal()">&times;</button>
-      </div>
+      <div class="modal-header">Set Intensity Level</div>
       <div class="date-display" id="selectedDate"></div>
-      <div class="intensity-selector">
-        <button class="intensity-btn" onclick="setIntensity(0)">
-          <div>None</div>
-          <div style="font-size: 11px; color: #666;">Level 0</div>
-        </button>
-        <button class="intensity-btn" onclick="setIntensity(1)">
-          <div>Low</div>
-          <div style="font-size: 11px; color: #666;">Level 1</div>
-        </button>
-        <button class="intensity-btn" onclick="setIntensity(2)">
-          <div>Medium</div>
-          <div style="font-size: 11px; color: #666;">Level 2</div>
-        </button>
-        <button class="intensity-btn" onclick="setIntensity(3)">
-          <div>High</div>
-          <div style="font-size: 11px; color: #666;">Level 3</div>
-        </button>
-        <button class="intensity-btn" onclick="setIntensity(4)">
-          <div>Very High</div>
-          <div style="font-size: 11px; color: #666;">Level 4</div>
-        </button>
-      </div>
+      <div class="intensity-selector" id="intensityButtons"></div>
     </div>
   </div>
 
   <script>
-    const state = {
-      tasks: [],
-      currentTask: null,
-      selectedDate: null,
-      startDate: new Date(new Date().getFullYear(), 0, 1)
+    let taskData = {
+      name: '',
+      colors: [],
+      entries: {}
     };
     
-    function initializeApp() {
-      const savedTasks = localStorage.getItem('taskTrackerTasks');
-      if (savedTasks) {
-        state.tasks = JSON.parse(savedTasks);
-        updateTaskSelector();
-        if (state.tasks.length > 0) {
-          state.currentTask = state.tasks[0].id;
-          renderAllHeatmaps();
-        }
+    let selectedDate = null;
+    const startDate = new Date(new Date().getFullYear(), 0, 1);
+    
+    function init() {
+      const saved = localStorage.getItem('notionTaskHeatmap');
+      if (saved) {
+        taskData = JSON.parse(saved);
+        showTracker();
       }
     }
     
-    function saveTasks() {
-      localStorage.setItem('taskTrackerTasks', JSON.stringify(state.tasks));
-    }
-    
-    function openTaskModal() {
-      document.getElementById('taskModal').classList.add('show');
-    }
-    
-    function closeTaskModal() {
-      document.getElementById('taskModal').classList.remove('show');
-      document.getElementById('taskNameInput').value = '';
-    }
-    
-    function createTask() {
-      const name = document.getElementById('taskNameInput').value.trim();
+    function setupTask() {
+      const name = document.getElementById('taskName').value.trim();
       if (!name) {
         alert('Please enter a task name');
         return;
       }
       
-      const colors = [
-        document.getElementById('color0').value,
-        document.getElementById('color1').value,
-        document.getElementById('color2').value,
-        document.getElementById('color3').value,
-        document.getElementById('color4').value
+      taskData.name = name;
+      taskData.colors = [
+        document.getElementById('c0').value,
+        document.getElementById('c1').value,
+        document.getElementById('c2').value,
+        document.getElementById('c3').value,
+        document.getElementById('c4').value
       ];
+      taskData.entries = {};
       
-      const task = {
-        id: Date.now().toString(),
-        name: name,
-        colors: colors,
-        data: {}
-      };
-      
-      state.tasks.push(task);
-      saveTasks();
-      updateTaskSelector();
-      closeTaskModal();
-      renderAllHeatmaps();
+      save();
+      showTracker();
     }
     
-    function updateTaskSelector() {
-      const selector = document.getElementById('taskSelector');
-      selector.innerHTML = '<option value="">Select Task</option>';
-      state.tasks.forEach(task => {
-        const option = document.createElement('option');
-        option.value = task.id;
-        option.textContent = task.name;
-        selector.appendChild(option);
-      });
+    function showTracker() {
+      document.getElementById('setupScreen').style.display = 'none';
+      document.getElementById('trackerScreen').style.display = 'block';
+      document.getElementById('taskTitle').textContent = taskData.name;
+      
+      for (let i = 0; i < 5; i++) {
+        document.getElementById(`l${i}`).style.background = taskData.colors[i];
+      }
+      
+      renderHeatmap();
+      createIntensityButtons();
     }
     
-    function renderAllHeatmaps() {
-      const container = document.getElementById('heatmapContainer');
-      container.innerHTML = '';
-      
-      state.tasks.forEach(task => {
-        const section = document.createElement('div');
-        section.className = 'heatmap-section';
-        
-        const header = document.createElement('div');
-        header.className = 'task-header';
-        
-        const taskName = document.createElement('div');
-        taskName.className = 'task-name';
-        taskName.textContent = task.name;
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn';
-        deleteBtn.textContent = '🗑️ Delete';
-        deleteBtn.onclick = () => deleteTask(task.id);
-        
-        header.appendChild(taskName);
-        header.appendChild(deleteBtn);
-        
-        const heatmapDiv = document.createElement('div');
-        heatmapDiv.id = `heatmap-${task.id}`;
-        heatmapDiv.className = 'heatmap-grid';
-        
-        const legend = createLegend(task.colors);
-        
-        section.appendChild(header);
-        section.appendChild(heatmapDiv);
-        section.appendChild(legend);
-        container.appendChild(section);
-        
-        renderHeatmap(task);
-      });
-    }
-    
-    function createLegend(colors) {
-      const legend = document.createElement('div');
-      legend.className = 'legend';
-      
-      const label = document.createElement('span');
-      label.className = 'legend-label';
-      label.textContent = 'Less';
-      legend.appendChild(label);
-      
-      colors.forEach((color, i) => {
-        const box = document.createElement('div');
-        box.className = 'legend-box';
-        box.style.background = color;
-        legend.appendChild(box);
-      });
-      
-      const labelMore = document.createElement('span');
-      labelMore.className = 'legend-label';
-      labelMore.textContent = 'More';
-      legend.appendChild(labelMore);
-      
-      return legend;
-    }
-    
-    function renderHeatmap(task) {
-      const heatmapDiv = document.getElementById(`heatmap-${task.id}`);
-      heatmapDiv.innerHTML = '';
-      heatmapDiv.style.display = 'grid';
-      heatmapDiv.style.gridTemplateRows = 'repeat(7, 1fr)';
-      heatmapDiv.style.gridAutoFlow = 'column';
-      heatmapDiv.style.gap = '3px';
+    function renderHeatmap() {
+      const heatmap = document.getElementById('heatmap');
+      heatmap.innerHTML = '';
       
       const cols = 53;
       const rows = 7;
@@ -524,26 +336,42 @@
         for (let day = 0; day < rows; day++) {
           const date = getDateFromPosition(day, week);
           const dateStr = formatDate(date);
-          const level = task.data[dateStr] || 0;
+          const level = taskData.entries[dateStr] || 0;
           
           const cell = document.createElement('div');
           cell.className = 'cell';
-          cell.style.background = task.colors[level];
+          cell.style.background = taskData.colors[level];
           cell.dataset.date = dateStr;
-          cell.dataset.taskId = task.id;
           cell.dataset.level = level;
           
-          cell.onclick = () => openIntensityModal(task.id, dateStr, level);
-          cell.onmouseenter = (e) => showTooltip(e, task.name, dateStr, level);
+          cell.onclick = () => openModal(dateStr, level);
+          cell.onmouseenter = (e) => showTooltip(e, dateStr, level);
           cell.onmouseleave = hideTooltip;
           
-          heatmapDiv.appendChild(cell);
+          heatmap.appendChild(cell);
         }
       }
     }
     
+    function createIntensityButtons() {
+      const container = document.getElementById('intensityButtons');
+      const levels = ['None', 'Low', 'Medium', 'High', 'Very High'];
+      
+      container.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'intensity-btn';
+        btn.innerHTML = `
+          <span>${levels[i]} (L${i})</span>
+          <div class="color-preview" style="background: ${taskData.colors[i]}"></div>
+        `;
+        btn.onclick = () => setIntensity(i);
+        container.appendChild(btn);
+      }
+    }
+    
     function getDateFromPosition(day, week) {
-      const date = new Date(state.startDate);
+      const date = new Date(startDate);
       const startDay = date.getDay();
       const offset = (day - (startDay === 0 ? 6 : startDay - 1) + 7) % 7;
       date.setDate(date.getDate() + offset + (week * 7));
@@ -557,25 +385,23 @@
       return `${year}-${month}-${day}`;
     }
     
-    function showTooltip(e, taskName, dateStr, level) {
+    function showTooltip(e, dateStr, level) {
       const tooltip = document.getElementById('tooltip');
-      const levelNames = ['None', 'Low', 'Medium', 'High', 'Very High'];
-      tooltip.textContent = `${taskName} - ${dateStr}: ${levelNames[level]} (Level ${level})`;
+      const levels = ['None', 'Low', 'Medium', 'High', 'Very High'];
+      tooltip.textContent = `${dateStr}: ${levels[level]} (Level ${level})`;
       tooltip.classList.add('show');
       
       const rect = e.target.getBoundingClientRect();
       tooltip.style.left = rect.right + 10 + 'px';
-      tooltip.style.top = rect.top + 'px';
+      tooltip.style.top = rect.top + window.scrollY + 'px';
     }
     
     function hideTooltip() {
       document.getElementById('tooltip').classList.remove('show');
     }
     
-    function openIntensityModal(taskId, dateStr, currentLevel) {
-      state.currentTask = taskId;
-      state.selectedDate = dateStr;
-      
+    function openModal(dateStr, currentLevel) {
+      selectedDate = dateStr;
       document.getElementById('selectedDate').textContent = dateStr;
       document.getElementById('intensityModal').classList.add('show');
       
@@ -585,34 +411,33 @@
       });
     }
     
-    function closeIntensityModal() {
+    function closeModal() {
       document.getElementById('intensityModal').classList.remove('show');
     }
     
     function setIntensity(level) {
-      const task = state.tasks.find(t => t.id === state.currentTask);
-      if (task) {
-        task.data[state.selectedDate] = level;
-        saveTasks();
-        renderAllHeatmaps();
-        closeIntensityModal();
+      taskData.entries[selectedDate] = level;
+      save();
+      renderHeatmap();
+      closeModal();
+    }
+    
+    function resetTask() {
+      if (confirm('Reset this task? This will clear all data.')) {
+        localStorage.removeItem('notionTaskHeatmap');
+        location.reload();
       }
     }
     
-    function deleteTask(taskId) {
-      if (confirm('Are you sure you want to delete this task?')) {
-        state.tasks = state.tasks.filter(t => t.id !== taskId);
-        saveTasks();
-        renderAllHeatmaps();
-        updateTaskSelector();
-      }
+    function save() {
+      localStorage.setItem('notionTaskHeatmap', JSON.stringify(taskData));
     }
     
-    function openSettingsModal() {
-      alert('Settings coming soon! You can customize colors when creating tasks.');
-    }
+    document.getElementById('intensityModal').onclick = (e) => {
+      if (e.target.id === 'intensityModal') closeModal();
+    };
     
-    initializeApp();
+    init();
   </script>
 </body>
 </html>
